@@ -43,6 +43,24 @@ public class solver {
         else if(snip.size()>1){
             Iterator<Integer> x = snip.iterator();
             while(x.hasNext()){
+                    int i = x.next();
+                    //find a factor or dividend of the factor/dividend
+                    if((part % i == 0) || (i % part == 0)){
+                        int factor = part / i;
+                        int divisor  = i /part;
+                    //create a treeset without the factor / dividend
+                    TreeSet<Integer> piece = new TreeSet<Integer>();
+                    piece = (TreeSet<Integer>)snip.clone();
+                    piece.remove(i);
+
+                    if(findPart2(piece,factor)){
+                        return true;
+                    }
+                    else if(findPart2(piece,divisor)){
+                        return true;
+                    }
+                }
+                //if we cant find a factor or dividend of the factor/dividend
                 
             }
         }
