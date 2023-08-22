@@ -15,6 +15,7 @@ public class solver {
         addSub(intArr, goal);
         return false;
     }
+    
     //this searches for factors or dividends and tries to make the respective factor/divisor
     private static Boolean doMath(TreeSet<Integer> inputArrNum, int goal){
         Iterator<Integer> value= inputArrNum.iterator();
@@ -38,6 +39,7 @@ public class solver {
         }
         return false;
     }
+    
     //creates the other factor or dividend if found in doMath
     //part is the variable we are trying to make
     private static Boolean findPart2(TreeSet<Integer> inputArrNum, int part){
@@ -72,6 +74,7 @@ public class solver {
         }
         return false;
     }
+    
     //takes the numbers given in the treeset and then tries to create goal using addition and subtraction
     private static Boolean addSub(Integer[] inputArrNum, int goal){
         //if the first element is greater, we try to subtract downwards
@@ -87,9 +90,13 @@ public class solver {
                 }
             }
             //if here, we've found the value of the smallest distance and the index of the number that creates it
-            
+            //we now replace the first index with the new distance and isolate the remaining numbers
+            //We then repeat the process through isolating via 0 due to the identity property of addition and subtraction
+            inputArrNum[0] = smallDist;
+            inputArrNum[smallNumIndex] = 0;
+            addSub(inputArrNum, goal-smallDist);
         }
-        //if the first element is the goal and the array still has number to use, we try to make a 1 with the rest
+        //if the first element is the goal and the array still has numbers to use, we try to make a 1 with the rest
         else if(inputArrNum[0] == goal){
             if(inputArrNum.length != 1){
                 Integer[] smallerSnip = Arrays.copyOfRange(inputArrNum, 1, inputArrNum.length);
@@ -101,7 +108,9 @@ public class solver {
         }
         //if the first element is less than the goal, we try to add upwards
         else{
-
+            int smallDist = Math.abs(goal - (Math.abs(inputArrNum[0]+inputArrNum[1])));
+            int smallNumIndex =1;
+            
         }
         return false;
     }
@@ -118,7 +127,6 @@ public class solver {
             return false;
         }
     }
-    
     public static void main(String[] args){
         while(true){
 
