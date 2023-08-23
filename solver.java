@@ -1,17 +1,21 @@
 import java.util.*;
 //Notes: Treeset is always sorted via natural order unless given an overriding comparator
 
+//Notes as of 8/22/23 8:55pm: solve should take an array to make the 2nd condition easier and doMath might be able to
+//use a hashset to make remove faster. findPart2 might not need a treeset
 public class solver {
     private static Boolean solve(TreeSet<Integer> inputArrNum, int goal){
         //first search for factors and dividends
         if(doMath(inputArrNum,goal)){
             return true;
         }
-        //if no work, try to make factors or dividends
-
-        //if all else fails, add and subtract to victory
+        //convert the treeSet into an array in order to make the next steps easier
         Integer intArr[] = new Integer[inputArrNum.size()];
         intArr = inputArrNum.toArray(intArr);
+        //if no work, try to make factors or dividends by going through all unique pairs in inputArrNum and checking if they
+        //are either a factor or dividend
+
+        //if all else fails, add and subtract to victory
         addSub(intArr, goal);
         return false;
     }
@@ -99,6 +103,9 @@ public class solver {
         //if the first element is the goal and the array still has numbers to use, we try to make a 1 with the rest
         else if(inputArrNum[0] == goal){
             if(inputArrNum.length != 1){
+                //we generally want to aim for 1 instead of 0 since 0 can only come about through subtracting two
+                //identical numbers while 1 can be achieved through many different approaches
+                //it is also a viable approach due to the identity property of multiplcation
                 Integer[] smallerSnip = Arrays.copyOfRange(inputArrNum, 1, inputArrNum.length);
                 addSub(smallerSnip, 1);
             }
@@ -107,14 +114,22 @@ public class solver {
             }
         }
         //if the first element is less than the goal, we try to add upwards
-        else{
+        else if(inputArrNum[0] < goal){
             int smallDist = Math.abs(goal - (Math.abs(inputArrNum[0]+inputArrNum[1])));
             int smallNumIndex =1;
-            
+            for(int i =2; i<inputArrNum.length; i++){
+                if( smallDist > ( Math.abs( goal - ( Math.abs(inputArrNum[0]+inputArrNum[i]) ) ) ) ){
+                   smallNumIndex = i;
+                   smallDist = ( Math.abs( goal - ( Math.abs(inputArrNum[0]+inputArrNum[i]) ) ) );
+                }
+            }
+            inputArrNum[0] = smallDist;
+            inputArrNum[smallNumIndex] = 0;
+            addSub(inputArrNum, goal-smallDist);
         }
         return false;
     }
-
+    
     private static Boolean isValid(String check){
         //if there is a single non digit character, parseInt returns an exception
         try{
