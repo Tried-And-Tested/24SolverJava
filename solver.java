@@ -3,210 +3,213 @@ import java.util.*;
 
 //Notes as of 8/22/23 8:55pm: solve should take an array to make the 2nd condition easier and doMath might be able to
 //use a hashset to make remove faster. findPart2 might not need a treeset
+
+//Notes as of 8/23/23 2:38pm: Can not use a treeset because we have to account for duplicates
+
+//Notes as of 8/23/23 2:53pm: findPart2 addSub contingency uses an array of size 1 with goal 0 when duplicates are present
+//since it constantly finds factors and removes them
+
+//Notes as of 8/23/23 3:03pm: the 1st and 2nd ring of doMath assumes that every number is different. If all numbers are
+//duplicates, then findPart2 infinitly loops
+
+//Notes as of 8/23/23 7:52pm: when we eventually print out the solution, in the case of subtraction, we need to
+//keep track of which number is being subtracted from which
+
+//Notes as of 8/24/23 12:03am: doMath still needs its division part written and tested
 public class solver {
-    private static Boolean solve(Integer[] inputArrNum, int goal){
-        //first search for factors and dividends
-        if(doMath(inputArrNum,goal)){
+    private static Boolean solve(Integer[] userInputChoice, int goal){
+        ArrayList<Integer> userInputChoiceList = new ArrayList<Integer>(Arrays.asList(userInputChoice));
+        //ensure that no matter how we enter in the 4 numbers, all the methods will recieve a constant
+        Collections.sort(userInputChoiceList);
+        if(doMath(userInputChoiceList, goal)){
             return true;
         }
-        //if no work, try to make factors or dividends by going through all unique pairs in inputArrNum and checking if they
-        //are either a factor or dividend
-        for(int x=0;x<inputArrNum.length;x++){
-            for(int y=0;y<inputArrNum.length;y++){
-                //if we find either a factor or dividend, we call doMath with an array of size 3 [factor, element, element]
-                //and the respective divisor / factor as part
-                Integer[] doMathInSmall = new Integer[3];
-                if((Math.abs(x-y)) % goal == 0){
-                    //if x+y is a dividend of goal
-                    doMathInSmall[0] = x+y;
-                    //space represents the other 2 empty spaces after we find the factor or dividend
-                    int space =1;
-                    for(Integer leftovers : inputArrNum){
-                        //we are looking for the other 2 unused elements and putting them in doMathInSmall
-                        //only 2 numbers can make this statement true
-                        if(leftovers != x && leftovers != y){
-                            doMathInSmall[space] = leftovers;
-                            space++;
-                        }
-                    }
 
-                    if(doMath(doMathInSmall, ((x-y)/ goal) )){
-                        return true;
-                    }
-                }
-                else if((x+y) % goal == 0){
-                    //if x+y is a dividend of goal
-                    doMathInSmall[0] = x+y;
-                    //space represents the other 2 empty spaces after we find the factor or dividend
-                    int space =1;
-                    for(Integer leftovers : inputArrNum){
-                        //we are looking for the other 2 unused elements and putting them in doMathInSmall
-                        //only 2 numbers can make this statement true
-                        if(leftovers != x && leftovers != y){
-                            doMathInSmall[space] = leftovers;
-                            space++;
-                        }
-                    }
-
-                    if(doMath(doMathInSmall, ((x+y)/ goal) )){
-                        return true;
-                    }
-                }
-                if(goal % (Math.abs(x-y)) == 0){
-                    //if x+y is a dividend of goal
-                    doMathInSmall[0] = x+y;
-                    //space represents the other 2 empty spaces after we find the factor or dividend
-                    int space =1;
-                    for(Integer leftovers : inputArrNum){
-                        //we are looking for the other 2 unused elements and putting them in doMathInSmall
-                        //only 2 numbers can make this statement true
-                        if(leftovers != x && leftovers != y){
-                            doMathInSmall[space] = leftovers;
-                            space++;
-                        }
-                    }
-
-                    if(doMath(doMathInSmall, (goal / (x-y)) )){
-                        return true;
-                    }
-                }
-                else if(goal % (x+y) == 0){
-                    //if x+y is a dividend of goal
-                    doMathInSmall[0] = x+y;
-                    //space represents the other 2 empty spaces after we find the factor or dividend
-                    int space =1;
-                    for(Integer leftovers : inputArrNum){
-                        //we are looking for the other 2 unused elements and putting them in doMathInSmall
-                        //only 2 numbers can make this statement true
-                        if(leftovers != x && leftovers != y){
-                            doMathInSmall[space] = leftovers;
-                            space++;
-                        }
-                    }
-
-                    if(doMath(doMathInSmall, (goal / (x+y)) )){
-                        return true;
-                    }
-                }
-            }
-        }
-        //if all else fails, add and subtract to victory
-        addSub(inputArrNum, goal);
-        return false;
-    }
-    
-    //this searches for factors or dividends and tries to make the respective factor/divisor
-    private static Boolean doMath(Integer[] inputArrNum, int goal){
-        for(Integer x : inputArrNum){
-            if((goal % x == 0) || (x % goal == 0)){
-                int factor = goal / x;
-                int divisor  = x /goal;
-                //create a treeset without the factor / dividend
-                TreeSet<Integer> part2Snip = new TreeSet<Integer>(Arrays.asList(inputArrNum));
-                part2Snip.remove(x);
-
-                if(findPart2(part2Snip,factor)){
-                    return true;
-                }
-                if(findPart2(part2Snip,divisor)){
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-    
-    //creates the other factor or dividend if found in doMath
-    //part is the variable we are trying to make
-    private static Boolean findPart2(TreeSet<Integer> inputArrNum, int part){
-        if(inputArrNum.size()==1 && inputArrNum.first()==part){
+        else if(createFactorOrDivisor(userInputChoiceList, goal)){
             return true;
         }
-        else if(inputArrNum.size()>1){
-            Iterator<Integer> x = inputArrNum.iterator();
-            while(x.hasNext()){
-                    int i = x.next();
-                    //find a factor or dividend of the factor/dividend
-                    if((part % i == 0) || (i % part == 0)){
-                        int factor = part / i;
-                        int divisor  = i /part;
-                    //remove the factor from the list of unused numbers
-                    inputArrNum.remove(i);
-                    //if we can create the factor or dividend, then we try to make it with the rest of the numbers avaliable
-                    if(findPart2(inputArrNum,factor)){
-                        return true;
-                    }
-                    else if(findPart2(inputArrNum,divisor)){
-                        return true;
-                    }
-                }
-                //if we cant find a factor or dividend of the factor/dividend, we create it through addition or subtraction
-                Integer addSubIn[] = new Integer[inputArrNum.size()];
-                addSubIn = inputArrNum.toArray(addSubIn);
-                addSub(addSubIn, part);
-            }
+
+        else if(addSub(userInputChoiceList, goal, goal)){
+            return true;
         }
         return false;
     }
+
     
-    //takes the numbers given in the treeset and then tries to create goal using addition and subtraction
-    private static Boolean addSub(Integer[] inputArrNum, int goal){
-        //if the first element is greater, we try to subtract downwards
-        if(inputArrNum[0] > goal){
-            //smallDist is supposed to represent the smallest distance possible from goal that can be made through subtraction
-            int smallDist = Math.abs(goal - (Math.abs(inputArrNum[0]-inputArrNum[1])));
-            //smallNumIndex is the index of the other value that yeilds the smallest difference with the goal
-            int smallNumIndex = 1;
-            for(int i =2; i<inputArrNum.length; i++){
-                //we always want the smallest possible distance from the goal
-                if( smallDist > ( Math.abs( goal - ( Math.abs(inputArrNum[0]-inputArrNum[i]) ) ) ) ){
-                   smallNumIndex = i;
-                   smallDist = ( Math.abs( goal - ( Math.abs(inputArrNum[0]-inputArrNum[i]) ) ) );
+    private static Boolean doMath(ArrayList<Integer> inputNumArr, int goal){
+        //The point of doMath is to search for factors or dividends. If a factor or dividend is found,
+        //then we find its factor or dividend until we can no longer. If we can no longer, then we execute
+        //addSub with what is left and the factor / divisor we have to make
+        
+        ArrayList<Integer> leftovers = new ArrayList<>();
+
+        //do Multiplcation first
+        //we want to do this inputNumArr.size() amount of times to ensure that no stone is left unturned
+        for(Integer x : inputNumArr){
+            ArrayList<Integer> factors = partFinder(inputNumArr, x, "M");
+            for(Integer i : inputNumArr){
+                if(!(factors.contains(i))){
+                    leftovers.add(i);
                 }
             }
-            //if here, we've found the value of the smallest distance and the index of the number that creates it
-            //we now replace the first index with the new distance and isolate the remaining numbers
-            //We then repeat the process through isolating via 0 due to the identity property of addition and subtraction
-            inputArrNum[0] = smallDist;
-            inputArrNum[smallNumIndex] = 0;
-            addSub(inputArrNum, goal-smallDist);
-        }
-        //if the first element is the goal and the array still has numbers to use, we try to make a 1 with the rest
-        else if(inputArrNum[0] == goal){
-            if(inputArrNum.length != 1){
-                //we generally want to aim for 1 instead of 0 since 0 can only come about through subtracting two
-                //identical numbers while 1 can be achieved through many different approaches
-                //it is also a viable approach due to the identity property of multiplcation
-                Integer[] smallerSnip = Arrays.copyOfRange(inputArrNum, 1, inputArrNum.length);
-                addSub(smallerSnip, 1);
+            //at this point, all the numbers in leftovers can be multiplied by the product of 
+            //the elements in factors to get goal
+            int product = 1;
+            for(Integer m : factors){
+                product *= m;
             }
-            else{
+            if(product==goal || addSub(leftovers, (goal / product), (goal / product))){
                 return true;
             }
         }
-        //if the first element is less than the goal, we try to add upwards
-        else if(inputArrNum[0] < goal){
-            int smallDist = Math.abs(goal - (Math.abs(inputArrNum[0]+inputArrNum[1])));
-            int smallNumIndex =1;
-            for(int i =2; i<inputArrNum.length; i++){
-                //we always want the smallest possible distance from the goal
-                if( smallDist > ( Math.abs( goal - ( Math.abs(inputArrNum[0]+inputArrNum[i]) ) ) ) ){
-                   smallNumIndex = i;
-                   smallDist = ( Math.abs( goal - ( Math.abs(inputArrNum[0]+inputArrNum[i]) ) ) );
+        leftovers.clear();
+        //then division
+        //we want to do this inputNumArr.size() amount of times to ensure that no stone is left unturned
+        for(Integer x : inputNumArr){
+            ArrayList<Integer> divi = partFinder(inputNumArr, goal, "D");
+            for(Integer i : inputNumArr){
+                if(!(divi.contains(i))){
+                    leftovers.add(i);
                 }
             }
-            inputArrNum[0] = smallDist;
-            inputArrNum[smallNumIndex] = 0;
-            addSub(inputArrNum, goal-smallDist);
+            //at this point, all the numbers in leftovers can be divided by the quotient of 
+            //the elements in factors to get goal
+            if( (divi.size()==2) && (addSub(leftovers, (goal * (divi.get(0)/divi.get(1))), (goal * (divi.get(0) / divi.get(1) ) ) ) ) ){
+                return true;
+            }
         }
         return false;
+    }
+
+    private static ArrayList<Integer> partFinder(ArrayList<Integer>inputNumArrList, int start, String type){
+        //this is used to return an array list full of factors such that all that is left in the original
+        //array list are numbers that can only be added or subtracted
+        ArrayList<Integer> toReturn = new ArrayList<>();
+        int search = start;
+        while(toReturn.size() >=4){
+            for(int i=0;i<inputNumArrList.size();i++){
+                if(type.equals("M")){
+                    if(i != 0 && search % i == 0){
+                        toReturn.add(inputNumArrList.get(i));
+                        search = inputNumArrList.get(i);
+                    }
+                }
+                else if(type.equals("D")){
+                    if(i !=0 && i % search == 0){
+                        toReturn.add(inputNumArrList.get(i));
+                        search = inputNumArrList.get(i);
+                    }
+                }
+            }
+        }
+        return toReturn;
+    }
+
+    private static Boolean createFactorOrDivisor(ArrayList<Integer> inputNumArr, int goal){
+        return false;
+    }
+
+    private static Boolean addSub(ArrayList<Integer> inputNumArr, int aim, int goal){
+        //use the 1st index to hold the currVal, goal to hold what is given by solve, and aim to hold the number we are
+        //currently aiming for. So if the 1st index is a 2, we are aiming for 2 and goal is 4
+        //this falls through if given an arrayList with only 1 element
+        if(inputNumArr.size()>2){
+            if(inputNumArr.get(0) > goal){
+                //in here, the 1st index should be getting bigger and aim should be getting smaller
+                //Math.abs(goal - (Math.abs(inputNumArr[0]+inputNumArr[i]))) 
+                //represents the distance between goal and the 1st index minus the ith value in inputNumArr
+                int distanceFromAim = Math.abs(goal - (Math.abs(inputNumArr.get(0)+inputNumArr.get(1))));
+                int smallNumIndex = 1;
+                for(int i =2; i<inputNumArr.size(); i++){
+                    //we always want the smallest possible distance from the goal
+                    if( distanceFromAim > ( Math.abs( goal - ( Math.abs(inputNumArr.get(0)-inputNumArr.get(i)) ) ) ) ){
+                        smallNumIndex = i;
+                        distanceFromAim = ( Math.abs( goal - ( Math.abs(inputNumArr.get(0)-inputNumArr.get(i)) ) ) );
+                    }
+                }
+                //when here, we've found the index of the value that when added, brings us closest to goal
+                //update inputNumArr[0] to inputNumArr[0] - inputNumArr[smallNumIndex]
+                inputNumArr.set(0,Math.abs(inputNumArr.get(0) - inputNumArr.get(smallNumIndex)));
+                //subtract from aim the distance we gain from adding inputNumArr.get(smallIndex)
+                aim=Math.abs(aim-inputNumArr.get(0));
+                //remove the value at smallNumIndex in order to signify that we've used the number
+                inputNumArr.remove(smallNumIndex);
+            }
+
+            else if(inputNumArr.get(0) < goal){
+                //in here, the 1st index should be getting bigger and aim should be getting smaller
+                //Math.abs(goal - (Math.abs(inputNumArr[0]+inputNumArr[i]))) 
+                //represents the distance between goal and the 1st index plus the ith value in inputNumArr
+                int distanceFromAim = Math.abs(goal - (Math.abs(inputNumArr.get(0)+inputNumArr.get(1))));
+                int smallNumIndex = 1;
+                for(int i =2; i<inputNumArr.size(); i++){
+                    //we always want the smallest possible distance from the goal
+                    if( distanceFromAim > ( Math.abs( goal - ( Math.abs(inputNumArr.get(0)+inputNumArr.get(i)) ) ) ) ){
+                        smallNumIndex = i;
+                        distanceFromAim = ( Math.abs( goal - ( Math.abs(inputNumArr.get(0)+inputNumArr.get(i)) ) ) );
+                    }
+                }
+                //when here, we've found the index of the value that when added, brings us closest to goal
+                //update inputNumArr[0] to inputNumArr[0] + inputNumArr[smallNumIndex]
+                inputNumArr.set(0,inputNumArr.get(0) + inputNumArr.get(smallNumIndex));
+                //subtract from aim the distance we gain from adding inputNumArr.get(smallIndex)
+                aim=Math.abs(aim-inputNumArr.get(0));
+                //remove the value at smallNumIndex in order to signify that we've used the number
+                inputNumArr.remove(smallNumIndex);
+            }
+        }
+        //since we will always have atleast 2 elements in the array
+        int behindSub = Math.abs(inputNumArr.get(inputNumArr.size()-1) - inputNumArr.get(inputNumArr.size()-2));
+        int behindAdd = inputNumArr.get(inputNumArr.size()-1) + inputNumArr.get(inputNumArr.size()-2);
+        //the point here is to differentiat when we need to use x ± ( y ± z ) and x + y since there are 2 cases:
+        //either we are here with 3 elements or with 2 elements
+        //if we have 2 elements, we just check behindSub and behindAdd and see which may be goal
+        //if we have 3, we need to find a way to add or subtract either behindSub or behindAdd
+        if(inputNumArr.size()==2){
+            //if here, we have 2 elements, most likely because an arrayList with 3 elements was given
+            //we just need to check if either behindSub or behindAdd is the answer
+            if(behindAdd == goal){
+                return true;
+            }
+            else if(behindSub == goal){
+                return true;
+            }
+        }
+        else if(inputNumArr.size()==3){
+            //if here, we have 3 elements, meaning we need to compute x ± ( y ± z )
+            //aim is the remaining distance between what we currently have at inputNumArr[0] and goal
+            if(aim == behindAdd){
+                //if we are lower than the goal and behindAdd is the distance needed to be covered
+                if(inputNumArr.get(0) > goal){
+                    inputNumArr.set(0, (inputNumArr.get(0) - behindAdd) );
+                }
+                //if higher
+                else{
+                    inputNumArr.set(0, (inputNumArr.get(0) + behindAdd) );
+                }
+            }
+            else if(aim == behindSub){
+                //if we are lower than the goal and behindSub is the distance needed to be covered
+                if(inputNumArr.get(0) > goal){
+                    inputNumArr.set(0, (inputNumArr.get(0) - behindSub) );
+                }
+                //if higher
+                else{
+                    inputNumArr.set(0, (inputNumArr.get(0) + behindSub) );
+                }
+            }
+        }
+        return inputNumArr.get(0) == goal;
     }
     
     private static Boolean isValid(String check){
         //if there is a single non digit character, parseInt returns an exception
         try{
             check = check.replaceAll("\\s+","");
-            Integer.parseInt(check);
+            int filter = Integer.parseInt(check);
+            if(filter > 99999999){
+                throw new Exception();
+            }
             return true;
         }
         catch(Exception e){
@@ -216,32 +219,33 @@ public class solver {
     }
     public static void main(String[] args){
         while(true){
-
             Scanner scan  = new Scanner(System.in);
             System.out.println("Please input 4 numbers deliminated by spaces or q to quit");
-                String input = scan.nextLine();
-                //isValid takes the user input as a string, removes the white space, then parses the result into an int
-                //7 is the smallest length allowed since [w x y z] is the smallest valid input
-                if(isValid(input) && input.length() <= 7){
-                    //create an array that consists only of non whitespace characters
-                    String[] inputArr = input.split("\\s+", 0);
-                    Integer[] inputArrNum = new Integer[inputArr.length];
-                    for(int i=0;i<inputArr.length;i++){
-                        inputArrNum[i]=Integer.parseInt(inputArr[i]);
-                    }
-                    //if both tests fail, we declare no solution
-                    if(!solve(inputArrNum,4) && !solve(inputArrNum,24)){
-                        System.out.println("No solution found");
-                    }
+            String input = scan.nextLine();
+            if(input.replaceAll("\\s+","").equals("q")){
+                scan.close();
+                System.exit(0);
+            }
+            //isValid takes the user input as a string, removes the white space, then parses the result into an int
+            //7 is the smallest length allowed since [w x y z] is the smallest valid input
+            else if(isValid(input) && input.length() >= 7){
+                //create an array that consists only of non whitespace characters
+                String[] inputArr = input.split("\\s+", 0);
+                Integer[] inputArrNum = new Integer[inputArr.length];
+                for(int i=0;i<inputArr.length;i++){
+                    inputArrNum[i]=Integer.parseInt(inputArr[i]);
                 }
-
-                else if(input.replaceAll("\\s+","").equals("q")){
-                    scan.close();
-                    System.exit(0);
+                //if both tests fail, we declare no solution
+                if(solve(inputArrNum,4) == true){
+                    System.out.println("Solution Found");
                 }
-
+                else if(solve(inputArrNum,24) == true){
+                    System.out.println("Solution Found");
+                }
                 else{
+                    System.out.println("No Solution Found");
                 }
+            }
         }
     }
 }
