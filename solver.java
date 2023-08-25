@@ -16,6 +16,19 @@ import java.util.*;
 //keep track of which number is being subtracted from which
 
 //Notes as of 8/24/23 12:03am: doMath still needs its division part written and tested
+
+//Notes as of 8/24/23 10:24am: doMath division still needs its addSub input to be finished and then test everything
+
+//Notes as of 8/24/23 3:30pm: still need to write in a 4 * 3! condition. Idea: if goal = 24, if there is a 4, try searching
+//for a 3
+
+//Notes as of 8/24/23 7:31pm: doMath's purpose should now create factors through searching or adding
+
+//Notes as of 8/24/23 9:47pm: doMath's algorithm should be similar to how addSub works, where 1 half is generated via 2
+//for loops and the other half is generated based on that
+
+//Notes as of 8/25/23 3:17pm: the 2nd part of doMath still needs to be done
+
 public class solver {
     private static Boolean solve(Integer[] userInputChoice, int goal){
         ArrayList<Integer> userInputChoiceList = new ArrayList<Integer>(Arrays.asList(userInputChoice));
@@ -24,89 +37,109 @@ public class solver {
         if(doMath(userInputChoiceList, goal)){
             return true;
         }
-
-        else if(createFactorOrDivisor(userInputChoiceList, goal)){
-            return true;
-        }
-
         else if(addSub(userInputChoiceList, goal, goal)){
             return true;
         }
         return false;
     }
-
     
+    private static void doMathHelper(ArrayList<Integer> inputNumArr, int goal, HashSet<Integer> factorList){
+        for(int i=0;i<inputNumArr.size();i++){
+            //if i alone is a factor
+            if(factorList.contains(inputNumArr.get(i))){
+                //if i is a factor, there are 2 cases:
+                //1) there is a factor of the other factor left in inputNumArr
+                //2) the other factor needs to be made
+                for(int o=0;o<inputNumArr.size();o++){
+                    //if the number at o is a factor of the other factor
+                    if( (goal / inputNumArr.get(i) ) % inputNumArr.get(o) == 0){
+                        ArrayList<Integer> inputNumArrShort = new ArrayList<>(inputNumArr);
+                        inputNumArrShort.remove(i);
+                        inputNumArrShort.remove(o);
+                        //the value that is needed to create the other factor for the factor
+                        int otherNum = (goal / inputNumArr.get(i) ) / inputNumArr.get(o);
+                        //if we can just add/sub to the otherNum
+                        if( addSub(inputNumArrShort, otherNum, otherNum) ){
+                            //this is the ret statement for this case
+                            return;
+                        }
+                        //else try to see if we can multiply /  divide to the otherNum
+                        String ans = createFactorOrDivisor(i, o, otherNum);
+                        if(ans != "F"){
+                            //if we can, we return
+                            return;
+                        }
+                    }
+                }
+                //see if we can make the other factor via addition or subtraction
+                ArrayList<Integer> inputNumArrShort = new ArrayList<>(inputNumArr);
+                inputNumArrShort.remove(i);
+                if(addSub(inputNumArrShort, (goal / inputNumArr.get(i) ), (goal / inputNumArr.get(i) ) ) ){
+                    return;
+                }
+            }
+            else{
+                //else if o alone is not a factor  
+                for(int o=0;o<inputNumArr.size();o++){
+                    //make sure the indexes are not the same  
+                    if(i != o){
+                        ArrayList<Integer> inputNumArrShort = new ArrayList<>(inputNumArr);
+                        inputNumArrShort.remove(i);
+                        inputNumArrShort.remove(o);
+                        //if o + i is a factor
+                        if(factorList.contains(inputNumArr.get(o) + inputNumArr.get(i) ) ){
+                             
+                        }
+                        //if o - i is a factor
+                        else if(factorList.contains(inputNumArr.get(o) - inputNumArr.get(i) ) ){
+
+                        }
+                        //if i - o is a factor
+                        else if(factorList.contains(inputNumArr.get(i) - inputNumArr.get(o) ) ){
+
+                        }
+                    }
+                }
+            }    
+        }
+    }
     private static Boolean doMath(ArrayList<Integer> inputNumArr, int goal){
         //The point of doMath is to search for factors or dividends. If a factor or dividend is found,
         //then we find its factor or dividend until we can no longer. If we can no longer, then we execute
         //addSub with what is left and the factor / divisor we have to make
+
+        //problem lies in the fact that 1 is a factor of everything
+        //factorials will also probably be dealt with in here as well
+
+        HashSet<Integer> factorList = new HashSet<>();
+        for(int i=1;i<14;i++){
+            if(24 % i == 0){
+                factorList.add(i);
+            }
+        }
+        doMathHelper(inputNumArr, goal, factorList);
+        return false;
+    }
         
-        ArrayList<Integer> leftovers = new ArrayList<>();
-
-        //do Multiplcation first
-        //we want to do this inputNumArr.size() amount of times to ensure that no stone is left unturned
-        for(Integer x : inputNumArr){
-            ArrayList<Integer> factors = partFinder(inputNumArr, x, "M");
-            for(Integer i : inputNumArr){
-                if(!(factors.contains(i))){
-                    leftovers.add(i);
-                }
-            }
-            //at this point, all the numbers in leftovers can be multiplied by the product of 
-            //the elements in factors to get goal
-            int product = 1;
-            for(Integer m : factors){
-                product *= m;
-            }
-            if(product==goal || addSub(leftovers, (goal / product), (goal / product))){
-                return true;
-            }
+    private static String createFactorOrDivisor(int first, int second, int goal){
+        //create goal using first and second via multiplcation or division
+        String toReturn="";
+        if(first > second && (first / second == goal) ){
+            toReturn = "D";
+            return toReturn;
         }
-        leftovers.clear();
-        //then division
-        //we want to do this inputNumArr.size() amount of times to ensure that no stone is left unturned
-        for(Integer x : inputNumArr){
-            ArrayList<Integer> divi = partFinder(inputNumArr, goal, "D");
-            for(Integer i : inputNumArr){
-                if(!(divi.contains(i))){
-                    leftovers.add(i);
-                }
-            }
-            //at this point, all the numbers in leftovers can be divided by the quotient of 
-            //the elements in factors to get goal
-            if( (divi.size()==2) && (addSub(leftovers, (goal * (divi.get(0)/divi.get(1))), (goal * (divi.get(0) / divi.get(1) ) ) ) ) ){
-                return true;
-            }
+        else if(second > first && (second / first) == goal){
+            toReturn = "DS";
+            return toReturn;
         }
-        return false;
-    }
-
-    private static ArrayList<Integer> partFinder(ArrayList<Integer>inputNumArrList, int start, String type){
-        //this is used to return an array list full of factors such that all that is left in the original
-        //array list are numbers that can only be added or subtracted
-        ArrayList<Integer> toReturn = new ArrayList<>();
-        int search = start;
-        while(toReturn.size() >=4){
-            for(int i=0;i<inputNumArrList.size();i++){
-                if(type.equals("M")){
-                    if(i != 0 && search % i == 0){
-                        toReturn.add(inputNumArrList.get(i));
-                        search = inputNumArrList.get(i);
-                    }
-                }
-                else if(type.equals("D")){
-                    if(i !=0 && i % search == 0){
-                        toReturn.add(inputNumArrList.get(i));
-                        search = inputNumArrList.get(i);
-                    }
-                }
-            }
+        else if(first * second == goal){
+            toReturn = "M";
+            return toReturn;
         }
-        return toReturn;
-    }
-
-    private static Boolean createFactorOrDivisor(ArrayList<Integer> inputNumArr, int goal){
-        return false;
+        else{
+            toReturn = "F";
+            return toReturn;
+        }
     }
 
     private static Boolean addSub(ArrayList<Integer> inputNumArr, int aim, int goal){
