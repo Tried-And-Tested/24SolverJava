@@ -29,6 +29,8 @@ import java.util.*;
 
 //Notes as of 8/25/23 3:17pm: the 2nd part of doMath still needs to be done
 
+//Notes as of 8/26/23 10:13am: Should be done with coding, beginning debugging
+
 public class solver {
     private static Boolean solve(Integer[] userInputChoice, int goal){
         ArrayList<Integer> userInputChoiceList = new ArrayList<Integer>(Arrays.asList(userInputChoice));
@@ -145,8 +147,7 @@ public class solver {
                 factorList.add(i);
             }
         }
-        doMathHelper(inputNumArr, goal, factorList);
-        return false;
+        return doMathHelper(inputNumArr, goal, factorList);
     }
         
     private static String createFactorOrDivisor(int first, int second, int goal){
