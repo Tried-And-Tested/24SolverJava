@@ -43,7 +43,7 @@ public class solver {
         return false;
     }
     
-    private static void doMathHelper(ArrayList<Integer> inputNumArr, int goal, HashSet<Integer> factorList){
+    private static Boolean doMathHelper(ArrayList<Integer> inputNumArr, int goal, HashSet<Integer> factorList){
         for(int i=0;i<inputNumArr.size();i++){
             //if i alone is a factor
             if(factorList.contains(inputNumArr.get(i))){
@@ -52,7 +52,7 @@ public class solver {
                 //2) the other factor needs to be made
                 for(int o=0;o<inputNumArr.size();o++){
                     //if the number at o is a factor of the other factor
-                    if( (goal / inputNumArr.get(i) ) % inputNumArr.get(o) == 0){
+                    if ( (goal / inputNumArr.get(i) ) % inputNumArr.get(o) == 0){
                         ArrayList<Integer> inputNumArrShort = new ArrayList<>(inputNumArr);
                         inputNumArrShort.remove(i);
                         inputNumArrShort.remove(o);
@@ -61,13 +61,13 @@ public class solver {
                         //if we can just add/sub to the otherNum
                         if( addSub(inputNumArrShort, otherNum, otherNum) ){
                             //this is the ret statement for this case
-                            return;
+                            return true;
                         }
                         //else try to see if we can multiply /  divide to the otherNum
                         String ans = createFactorOrDivisor(i, o, otherNum);
                         if(ans != "F"){
                             //if we can, we return
-                            return;
+                            return true;
                         }
                     }
                 }
@@ -75,7 +75,7 @@ public class solver {
                 ArrayList<Integer> inputNumArrShort = new ArrayList<>(inputNumArr);
                 inputNumArrShort.remove(i);
                 if(addSub(inputNumArrShort, (goal / inputNumArr.get(i) ), (goal / inputNumArr.get(i) ) ) ){
-                    return;
+                    return true;
                 }
             }
             else{
@@ -88,20 +88,48 @@ public class solver {
                         inputNumArrShort.remove(o);
                         //if o + i is a factor
                         if(factorList.contains(inputNumArr.get(o) + inputNumArr.get(i) ) ){
-                             
+                            int p1 = inputNumArr.get(o) + inputNumArr.get(i);
+                            int remainderAdd = inputNumArrShort.get(1) + inputNumArrShort.get(0);
+                            int remainderSub = Math.abs(inputNumArrShort.get(1) - inputNumArrShort.get(0));
+
+                            if(createFactorOrDivisor(p1, remainderAdd, goal) != "F"){
+                                return true;
+                            }
+                            else if(createFactorOrDivisor(p1, remainderSub, goal) != "F"){
+                                return true;
+                            }
                         }
                         //if o - i is a factor
                         else if(factorList.contains(inputNumArr.get(o) - inputNumArr.get(i) ) ){
+                            int p1 = inputNumArr.get(o) - inputNumArr.get(i);
+                            int remainderAdd = inputNumArrShort.get(1) + inputNumArrShort.get(0);
+                            int remainderSub = Math.abs(inputNumArrShort.get(1) - inputNumArrShort.get(0));
 
+                            if(createFactorOrDivisor(p1, remainderAdd, goal) != "F"){
+                                return true;
+                            }
+                            else if(createFactorOrDivisor(p1, remainderSub, goal) != "F"){
+                                return true;
+                            }
                         }
                         //if i - o is a factor
                         else if(factorList.contains(inputNumArr.get(i) - inputNumArr.get(o) ) ){
+                            int p1 = inputNumArr.get(i) - inputNumArr.get(o);
+                            int remainderAdd = inputNumArrShort.get(1) + inputNumArrShort.get(0);
+                            int remainderSub = Math.abs(inputNumArrShort.get(1) - inputNumArrShort.get(0));
 
+                            if(createFactorOrDivisor(p1, remainderAdd, goal) != "F"){
+                                return true;
+                            }
+                            else if(createFactorOrDivisor(p1, remainderSub, goal) != "F"){
+                                return true;
+                            }
                         }
                     }
                 }
             }    
         }
+        return false;
     }
     private static Boolean doMath(ArrayList<Integer> inputNumArr, int goal){
         //The point of doMath is to search for factors or dividends. If a factor or dividend is found,
